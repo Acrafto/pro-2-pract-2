@@ -1,5 +1,5 @@
-#TO DO: -Aplicar bien lo del tiempo de consulta tal y como se indica en el material, 
-#-Añadir los prinst que pone el material para todo ._.
+#TO DO: -Aplicar bien lo del tiempo de consulta tal y como se indica en el material(creo que ya está), 
+#-Añadir los prints que pone el material para todo ._.(Ya estaria esto hecho)
 
 class Patient:
     def __init__(self, IDPac, Consult_type, Priority,Testimated, Arrival_time): #finally added the estimated time
@@ -150,8 +150,8 @@ class Turn_manager:
             ("specialist", "priority"): ArrayQueue(name="SPECIAL URGENT"),
             ("specialist", "no_priority"): ArrayQueue(name="SPECIAL NON-URGENT")       
         }
-        self.Consulta_general=[None,0] 
-        self.Consulta_especialista=[None,0] #I do not think we need a queue for this two, so I will use a normal list
+        self.Consulta_general=[None,0] #I do not think we need a queue for this two, so I will use a normal list
+        self.Consulta_especialista=[None,0] #I use the second element to store the time left for the consultation
         self._tActual=0
     @property
     def tActual(self): 
@@ -170,61 +170,85 @@ class Turn_manager:
         self.tActual+=1
         return None
     def admit_patient(self, patient):
+        """Admit a patient to the admission queue."""
         self.admission_queue.enqueue(patient)
+        print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.testimated}")
 
     def process_admission(self):
+        """Process a patient from the admission queue to the appropriate consultation queue."""
         if not self.admission_queue.is_empty():
             patient = self.admission_queue.dequeue()
             patient.arrival_time = self.tActual
             self.queues[(patient.consult_type, patient.priority)].enqueue(patient)
+            print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.testimated}")
 
-    def Consulta_general(self):
-        if not self.queues[("general", "priority")].is_empty():
-            patient = self.queues[("general", "priority")].dequeue()
-            self.Consulta_general.append(patient)
-        else:
-            patient = self.queues[("general", "no_priority")].dequeue()
-            self.Consulta_general.append(patient)
-    
-    def check_and_prioritize(self): #I think this is what the material requests, a bit messy iterating all but it'll do the job
+    def check_and_prioritize(self):
+        """Check and prioritize patients in non-priority queues."""
         for key in [("general", "no_priority"), ("specialist", "no_priority")]:
             queue = self.queues[key]
-            for _ in range(len(queue)):  # Iterar sobre todos los pacientes en la cola
+            for _ in range(len(queue)):
                 patient = queue.dequeue()
                 tiempo_espera = self.tActual - patient.arrival_time
                 if tiempo_espera > 7:
-                    # Mover al paciente a la cola de "urgente"
+                    # Move the patient to the priority queue
                     new_key = (patient.consult_type, "priority")
                     self.queues[new_key].enqueue(patient)
+                    print(f"{self.tActual}: Priorización aplicada {patient.idpac}")
                 else:
-                    # Volver a encolar al paciente si no cumple la condición
+                    # Re-enqueue the patient if they don't meet the condition
                     queue.enqueue(patient)
 
-    def Consulta_especialista(self):
-        if not self.queues[("specialist", "priority")].is_empty():
-            patient = self.queues[("specialist", "priority")].dequeue()
-            self.Consulta_especialista.append(patient)
-        else:
-            patient = self.queues[("specialist", "no_priority")].dequeue()
-            self.Consulta_especialista.append(patient)   
-    
+    def Consulta_general(self):
+        """Start a general consultation if no consultation is in progress."""
+        if self.Consulta_general[1] == 0:
+            try:
+                if not self.queues[("general", "priority")].is_empty():
+                    patient = self.queues[("general", "priority")].dequeue()
+                else:
+                    patient = self.queues[("general", "no_priority")].dequeue()
+
+                self.Consulta_general[0] = patient
+                self.Consulta_general[1] = patient.testimated
+                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.testimated}")
+            except Exception:
+                print("No hay pacientes en las colas de consulta general.")
+
     def Process_Consulta_general(self):
-        if not self.Consulta_general.is_empty():
-            patient = self.Consulta_general.dequeue()
-            patient.testimated-=1
-            if patient.testimated==0:
+        """Process the ongoing general consultation."""
+        if self.Consulta_general[0] is not None:
+            self.Consulta_general[1] -= 1
+            if self.Consulta_general[1] == 0:
+                patient = self.Consulta_general[0]
+                self.Consulta_general[0] = None
+                tTotal2 = self.tActual - patient.arrival_time
+                print(f"{self.tActual}: {patient.idpac} sale {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual - tTotal2}, EST./TOTAL:{patient.testimated}/{tTotal2}")
                 return patient
-        else:
-            pass
+
+    def Consulta_especialista(self):
+        """Start a specialist consultation if no consultation is in progress."""
+        if self.Consulta_especialista[1] == 0:
+            try:
+                if not self.queues[("specialist", "priority")].is_empty():
+                    patient = self.queues[("specialist", "priority")].dequeue()
+                else:
+                    patient = self.queues[("specialist", "no_priority")].dequeue()
+
+                self.Consulta_especialista[0] = patient
+                self.Consulta_especialista[1] = patient.testimated
+                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.testimated}")
+            except Exception:
+                print("No hay pacientes en las colas de consulta especialista.")
 
     def Process_Consulta_especialista(self):
-        if not self.Consulta_especialista.is_empty():
-            patient = self.Consulta_especialista.dequeue()
-            patient.testimated-=1
-            if patient.testimated==0:
+        """Process the ongoing specialist consultation."""
+        if self.Consulta_especialista[0] is not None:
+            self.Consulta_especialista[1] -= 1
+            if self.Consulta_especialista[1] == 0:
+                patient = self.Consulta_especialista[0]
+                self.Consulta_especialista[0] = None
+                tTotal2 = self.tActual - patient.arrival_time
+                print(f"{self.tActual}: {patient.idpac} sale {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual - tTotal2}, EST./TOTAL:{patient.testimated}/{tTotal2}")
                 return patient
-        else:
-            pass
 
     def _str__(self):
         result = "Admission Queue:\n" + str(self.admission_queue) + "\n"
