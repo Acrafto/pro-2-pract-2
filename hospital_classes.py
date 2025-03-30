@@ -1,13 +1,15 @@
-#TO DO: -Aplicar bien lo del tiempo de consulta tal y como se indica en el material(creo que ya está), 
-#-Añadir los prints que pone el material para todo ._.(Ya estaria esto hecho)
+from typing import Optional
 
 class Patient:
-    def __init__(self, IDPac, Consult_type, Priority,Testimated, Arrival_time): #finally added the estimated time
-        self.idpac=IDPac
-        self.consult_type=Consult_type
-        self.priority=Priority
-        self.testimated=Testimated
-        self.arrival_time=None #se define al entrar en la cola de espera
+    def __init__(self, IDPac: str, Consult_type: str, Priority: str, T_estimated: int, Arrival_time: int = None, Waited_time:int = 0): #finally added the estimated time
+        self.idpac = IDPac
+        self.consult_type = Consult_type
+        self.priority = Priority
+        self.t_estimated = T_estimated
+        self._arrival_time = Arrival_time #se define al entrar en la cola de espera
+        self._waited_time = Waited_time
+        #se iguala el valor de entrada al atributo protegido directamente para que no triggeree al setter en la inicializacion y no salte ValueError por
+        #darle el valor temporal de None. Luego al querer cambiar ese valor obviamente se ejecutara el setter, esto es solo para que no se ejecute en la inicializacion.
 
     @property
     def idpac(self):
@@ -19,7 +21,7 @@ class Patient:
         if not isinstance(value, str):
             raise ValueError("IDPac must be a integer")
         self._idpac=value
-    
+
     @property
     def consult_type(self):
         return self._consult_type
@@ -32,7 +34,7 @@ class Patient:
         if value not in ["general", "specialist"]:
             raise ValueError("Consult_type must be general or specialist")
         self._consult_type=value
-    
+
     @property
     def priority(self):
         return self._priority
@@ -45,37 +47,43 @@ class Patient:
         if value not in ["priority", "no_priority"]:
             raise ValueError("Priority must be priority or no_priority")
         self._priority=value
-        
+
     @property
-    def testimated(self):
-        return self._testimated
-    @testimated.setter 
-    def testimated(self, value):
+    def t_estimated(self): #Don't know exactly what this is, so I'm assuming it's an integer
+        return self._t_estimated
+    @t_estimated.setter
+    def t_estimated(self, value):
         if value==None:
             raise ValueError("time estimated cannot be None")
         if not isinstance(value, int):
             raise ValueError("time estimated must be an integer")
         if value<0:
             raise ValueError("time estimated must be positive")
-        self._testimated=value
-
+        self._t_estimated=value
 
     @property
-    def arrival_time(self): 
+    def arrival_time(self):
         return self._arrival_time
-    @arrival_time.setter 
+    @arrival_time.setter
     def arrival_time(self, value):
-        if value==None:
-            raise ValueError("Arrival_time cannot be None")
-        if not isinstance(value, int):
-            raise ValueError("Arrival_time must be an integer")
-        if value<0:
-            raise ValueError("Arrival_time must be positive")
+        if not isinstance(value, int) or value < 0:
+            raise ValueError("Waited Time must be a non negative integer")
         self._arrival_time=value
 
-    def _str_(self):
-        return "Patient ID: "+str(self.idpac)+", Consult type: "+self.consult_type+", Priority: "+str(self.priority)+", Arrival time: "+str(self.arrival_time)
+    @property
+    def waited_time(self):
+        return self._waited_time
+    @waited_time.setter
+    def waited_time(self, value):
+        if value==None:
+            raise ValueError("Arrival_time cannot be None")
+        if not isinstance(value, int) or value < 0:
+            raise ValueError("Arrival_time must be a non negative integer")
 
+        self._waited_time=value
+
+    def __str__(self):
+        return "Patient ID: "+str(self.idpac)+", Consult type: "+self.consult_type+", Priority: "+str(self.priority)+", Estimated Time: "+str(self.t_estimated)+", Arrival time: "+str(self.arrival_time)
 class ArrayQueue:
     """FIFO queue implementation using a Python list as underlying storage."""
 
@@ -83,7 +91,7 @@ class ArrayQueue:
 
     def __init__(self):
         """Create an empty queue."""
-        self._data = [None] * ArrayQueue.DEFAULT_CAPACITY
+        self._data= [None] * ArrayQueue.DEFAULT_CAPACITY
         self._size = 0
         self._front = 0
 
@@ -137,26 +145,36 @@ class ArrayQueue:
     def __str__(self):
         s = "[\n"
         for i in range(self._front, self._size):
-            s += "\t" + self._data[i].__str__() + "\n"
+            s += "\t" + str(self._data[i]) + "\n"
         s += "]\n"
         return s
-    
-class Turn_manager: 
+
+class Consultation:
+    def __init__(self, patient : Patient, t_inicio_consulta : int):
+        self._patient = patient
+        self._t_inicio_consulta = t_inicio_consulta
+
+
+class Turn_manager:
     def __init__(self):
-        self.admission_queue = ArrayQueue(name="ADMISSION")
+        self.admission_queue = ArrayQueue()
         self.queues = {
-            ("general", "priority"): ArrayQueue(name="GENERAL URGENT"),
-            ("general", "no_priority"): ArrayQueue(name="GENERAL NON-URGENT"),
-            ("specialist", "priority"): ArrayQueue(name="SPECIAL URGENT"),
-            ("specialist", "no_priority"): ArrayQueue(name="SPECIAL NON-URGENT")       
+            ("general", "priority"): ArrayQueue(),
+            ("general", "no_priority"): ArrayQueue(),
+            ("specialist", "priority"): ArrayQueue(),
+            ("specialist", "no_priority"): ArrayQueue()
         }
-        self.Consulta_general=[None,0] #I do not think we need a queue for this two, so I will use a normal list
-        self.Consulta_especialista=[None,0] #I use the second element to store the time left for the consultation
-        self._tActual=0
+        self.general_consultation = Consultation(None, 0)
+        self.specialist_consultation = Consultation(None, 0)
+        self._tActual = 1
+
+        # Lista para recolectar datos de los pacientes
+        self.pandas_matrix = []
+
     @property
-    def tActual(self): 
+    def tActual(self):
         return self._tActual
-    tActual.setter
+    @tActual.setter
     def tActual(self, value):
         if value==None:
             raise ValueError("tActual cannot be None")
@@ -165,93 +183,120 @@ class Turn_manager:
         if value<0:
             raise ValueError("tActual must be positive")
         self._tActual=value
-    def run_time(self)-> None:
-        self.check_and_prioritize()
+
+    def run_time(self)-> bool:
+        if(self.admission_queue.is_empty() and
+           self.queues[("general", "priority")].is_empty() and
+           self.queues[("general", "no_priority")].is_empty() and
+           self.queues[("specialist", "priority")].is_empty() and
+           self.queues[("specialist", "no_priority")].is_empty() and
+           self.general_consultation._patient is None and
+           self.specialist_consultation._patient is None
+        ):
+            return False
+       # self.check_and_prioritize()
+
+        self.remove_patient_from_general_consultation()
+        self.remove_patient_from_specialist_consultation()
+        self.add_patient_to_general_consult()
+        self.add_patient_to_specialist_consult()
+
         self.tActual+=1
-        return None
-    def admit_patient(self, patient):
+        return True
+
+    def add_patient_to_admition_queue(self, patient):
         """Admit a patient to the admission queue."""
         self.admission_queue.enqueue(patient)
-        print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.testimated}")
+        #print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.t_estimated}")
 
-    def process_admission(self):
+    def add_patient_to_respective_wait_queue(self):
         """Process a patient from the admission queue to the appropriate consultation queue."""
         if not self.admission_queue.is_empty():
             patient = self.admission_queue.dequeue()
             patient.arrival_time = self.tActual
             self.queues[(patient.consult_type, patient.priority)].enqueue(patient)
-            print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.testimated}")
+            print(f"{self.tActual}: {patient.idpac} en cola {patient.consult_type}/{patient.priority} EST:{patient.t_estimated}")
 
-    def check_and_prioritize(self):
-        """Check and prioritize patients in non-priority queues."""
-        for key in [("general", "no_priority"), ("specialist", "no_priority")]:
-            queue = self.queues[key]
-            for _ in range(len(queue)):
-                patient = queue.dequeue()
-                tiempo_espera = self.tActual - patient.arrival_time
-                if tiempo_espera > 7:
-                    # Move the patient to the priority queue
-                    new_key = (patient.consult_type, "priority")
-                    self.queues[new_key].enqueue(patient)
-                    print(f"{self.tActual}: Priorización aplicada {patient.idpac}")
-                else:
-                    # Re-enqueue the patient if they don't meet the condition
-                    queue.enqueue(patient)
+    def remove_patient_from_general_consultation(self):
+        """Remove the ongoing general consultation if it has finished."""
+        if self.general_consultation._patient is not None:
+            if self.tActual >= self.general_consultation._t_inicio_consulta + self.general_consultation._patient.t_estimated:
+                current_patient = self.general_consultation._patient
+                t_waited = self.general_consultation._t_inicio_consulta - current_patient.arrival_time
+                t_total = t_waited + current_patient.t_estimated
 
-    def Consulta_general(self):
+                # Registrar los datos del paciente en la matriz
+                self.pandas_matrix.append({
+                    "ID": current_patient.idpac,
+                    "Tipo de Consulta": current_patient.consult_type,
+                    "Prioridad Original": current_patient.priority,
+                    "Tiempo de Permanencia": t_waited,
+                    "Tiempo Total": t_total,
+                    "Fue Priorizado": current_patient.priority == "priority" and t_waited > 7
+                })
+
+                # Imprimir mensaje de salida
+                print(f"{self.tActual}: {current_patient.idpac} sale {current_patient.consult_type}/{current_patient.priority} ADM:{current_patient.arrival_time}, INI:{self.tActual - t_total}, EST./TOTAL:{current_patient.t_estimated}/{t_total}")
+
+                # Liberar la consulta
+                self.general_consultation._patient = None
+
+    def remove_patient_from_specialist_consultation(self):
+        """Remove the ongoing specialist consultation if it has finished."""
+        if self.specialist_consultation._patient is not None:
+            if self.tActual >= self.specialist_consultation._t_inicio_consulta + self.specialist_consultation._patient.t_estimated:
+                current_patient = self.specialist_consultation._patient
+                t_waited = self.specialist_consultation._t_inicio_consulta - current_patient.arrival_time
+                t_total = t_waited + current_patient.t_estimated
+
+                # Registrar los datos del paciente en la matriz
+                self.pandas_matrix.append({
+                    "ID": current_patient.idpac,
+                    "Tipo de Consulta": current_patient.consult_type,
+                    "Prioridad Original": current_patient.priority,
+                    "Tiempo de Permanencia": t_waited,
+                    "Tiempo Total": t_total,
+                    "Fue Priorizado": current_patient.priority == "priority" and t_waited > 7
+                })
+
+                # Imprimir mensaje de salida
+                print(f"{self.tActual}: {current_patient.idpac} sale {current_patient.consult_type}/{current_patient.priority} ADM:{current_patient.arrival_time}, INI:{self.tActual - t_total}, EST./TOTAL:{current_patient.t_estimated}/{t_total}")
+
+                # Liberar la consulta
+                self.specialist_consultation._patient = None
+
+    def add_patient_to_general_consult(self):
         """Start a general consultation if no consultation is in progress."""
-        if self.Consulta_general[1] == 0:
+        if(self.general_consultation._patient is None):
             try:
                 if not self.queues[("general", "priority")].is_empty():
                     patient = self.queues[("general", "priority")].dequeue()
                 else:
                     patient = self.queues[("general", "no_priority")].dequeue()
 
-                self.Consulta_general[0] = patient
-                self.Consulta_general[1] = patient.testimated
-                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.testimated}")
+                self.general_consultation._patient = patient
+                self.general_consultation._t_inicio_consulta = self.tActual
+                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.t_estimated}")
             except Exception:
-                print("No hay pacientes en las colas de consulta general.")
+                pass
+                #print("No hay pacientes en las colas de consulta general.")
 
-    def Process_Consulta_general(self):
-        """Process the ongoing general consultation."""
-        if self.Consulta_general[0] is not None:
-            self.Consulta_general[1] -= 1
-            if self.Consulta_general[1] == 0:
-                patient = self.Consulta_general[0]
-                self.Consulta_general[0] = None
-                tTotal2 = self.tActual - patient.arrival_time
-                print(f"{self.tActual}: {patient.idpac} sale {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual - tTotal2}, EST./TOTAL:{patient.testimated}/{tTotal2}")
-                return patient
-
-    def Consulta_especialista(self):
+    def add_patient_to_specialist_consult(self):
         """Start a specialist consultation if no consultation is in progress."""
-        if self.Consulta_especialista[1] == 0:
+        if(self.specialist_consultation._patient is None):
             try:
                 if not self.queues[("specialist", "priority")].is_empty():
                     patient = self.queues[("specialist", "priority")].dequeue()
                 else:
                     patient = self.queues[("specialist", "no_priority")].dequeue()
 
-                self.Consulta_especialista[0] = patient
-                self.Consulta_especialista[1] = patient.testimated
-                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.testimated}")
+                self.specialist_consultation._patient = patient
+                self.specialist_consultation._t_inicio_consulta = self.tActual
+                print(f"{self.tActual}: {patient.idpac} entra {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual}, EST:{patient.t_estimated}")
             except Exception:
-                print("No hay pacientes en las colas de consulta especialista.")
+                pass
+                #print("No hay pacientes en las colas de consulta especialista.")
 
-    def Process_Consulta_especialista(self):
-        """Process the ongoing specialist consultation."""
-        if self.Consulta_especialista[0] is not None:
-            self.Consulta_especialista[1] -= 1
-            if self.Consulta_especialista[1] == 0:
-                patient = self.Consulta_especialista[0]
-                self.Consulta_especialista[0] = None
-                tTotal2 = self.tActual - patient.arrival_time
-                print(f"{self.tActual}: {patient.idpac} sale {patient.consult_type}/{patient.priority} ADM:{patient.arrival_time}, INI:{self.tActual - tTotal2}, EST./TOTAL:{patient.testimated}/{tTotal2}")
-                return patient
-
-    def _str__(self):
-        result = "Admission Queue:\n" + str(self.admission_queue) + "\n"
-        for key, queue in self.queues.items():
-            result += f"Queue {key}:\n{queue}\n"
-        return result
+    def check_paitient_waited_timet(self):
+        """Remove the ongoing general consultation if has finished"""
+        pass
