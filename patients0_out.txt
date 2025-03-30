@@ -1,0 +1,53 @@
+  1: user1009 en cola general/no_priority EST:9
+  1: user1009 entra general/no_priority ADM: 1 INI: 1 EST: 9
+  4: user1007 en cola general/no_priority EST:7
+  7: user1008 en cola general/no_priority EST:3
+ 10: user1004 en cola general/no_priority EST:4
+ 10: user1009 sale general/no_priority ADM:1, INI: 1, EST./TOTAL: 9/9
+ 10: user1007 entra general/no_priority ADM: 4 INI: 10 EST: 7
+ 13: user1000 en cola specialist/no_priority EST:4
+ 13: user1000 entra specialist/no_priority ADM: 13 INI: 13 EST: 4
+ 16: user1001 en cola general/priority EST:3
+ 17: user1007 sale general/no_priority ADM:4, INI: 10, EST./TOTAL: 7/13
+ 17: user1000 sale specialist/no_priority ADM:13, INI: 13, EST./TOTAL: 4/4
+ 17: user1001 entra general/priority ADM: 16 INI: 17 EST: 3
+ 19: user1010 en cola specialist/no_priority EST:4
+ 19: user1010 entra specialist/no_priority ADM: 19 INI: 19 EST: 4
+ 20: user1001 sale general/priority ADM:16, INI: 17, EST./TOTAL: 3/4
+ 20: user1008 entra general/no_priority ADM: 7 INI: 20 EST: 3
+ 20: Priorización activa user1008
+ 22: user1003 en cola general/priority EST:8
+ 23: user1008 sale general/no_priority ADM:7, INI: 20, EST./TOTAL: 3/16
+ 23: user1010 sale specialist/no_priority ADM:19, INI: 19, EST./TOTAL: 4/4
+ 23: user1003 entra general/priority ADM: 22 INI: 23 EST: 8
+ 25: Priorización aplicada user1008
+ 25: user1008 en cola general/priority EST:4
+ 28: user1002 en cola specialist/priority EST:6
+ 28: user1002 entra specialist/priority ADM: 28 INI: 28 EST: 6
+ 31: user1003 sale general/priority ADM:22, INI: 23, EST./TOTAL: 8/9
+ 31: user1008 entra general/priority ADM: 25 INI: 31 EST: 4
+ 34: user1002 sale specialist/priority ADM:28, INI: 28, EST./TOTAL: 6/6
+ 35: user1008 sale general/priority ADM:25, INI: 31, EST./TOTAL: 4/10
+ 35: user1004 entra general/no_priority ADM: 10 INI: 35 EST: 4
+ 35: Priorización activa user1004
+ 39: user1004 sale general/no_priority ADM:10, INI: 35, EST./TOTAL: 4/29
+
+
+ ******************** NÚMERO MEDIO DE CITAS DE PACIENTES CON PRIORIZACIÓN APLICADA
+
+           prioritization_applied
+                             mean
+type                             
+general                  0.142857
+specialist               0.000000
+
+
+ ******************** TIEMPO MEDIO DE PERMANENCIA EN COLAS DE ESPERA
+
+                       waiting_time           
+                               mean        std
+type       priority                           
+general    no_priority    11.000000  10.739336
+           priority        2.666667   2.886751
+specialist no_priority     0.000000   0.000000
+           priority        0.000000        NaN

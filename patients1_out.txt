@@ -1,0 +1,78 @@
+  1: user1029 en cola specialist/priority EST:6
+  1: user1029 entra specialist/priority ADM: 1 INI: 1 EST: 6
+  4: user1049 en cola specialist/priority EST:8
+  7: user1033 en cola specialist/no_priority EST:10
+  7: user1029 sale specialist/priority ADM:1, INI: 1, EST./TOTAL: 6/6
+  7: user1049 entra specialist/priority ADM: 4 INI: 7 EST: 8
+ 10: user1047 en cola general/no_priority EST:5
+ 10: user1047 entra general/no_priority ADM: 10 INI: 10 EST: 5
+ 13: user1044 en cola general/no_priority EST:10
+ 15: user1047 sale general/no_priority ADM:10, INI: 10, EST./TOTAL: 5/5
+ 15: user1049 sale specialist/priority ADM:4, INI: 7, EST./TOTAL: 8/11
+ 15: user1044 entra general/no_priority ADM: 13 INI: 15 EST: 10
+ 15: user1033 entra specialist/no_priority ADM: 7 INI: 15 EST: 10
+ 15: Priorización activa user1033
+ 16: user1019 en cola general/priority EST:6
+ 19: user1007 en cola general/priority EST:5
+ 22: user1024 en cola specialist/no_priority EST:5
+ 25: user1038 en cola general/no_priority EST:10
+ 25: user1044 sale general/no_priority ADM:13, INI: 15, EST./TOTAL: 10/12
+ 25: user1033 sale specialist/no_priority ADM:7, INI: 15, EST./TOTAL: 10/18
+ 25: user1019 entra general/priority ADM: 16 INI: 25 EST: 6
+ 25: Priorización activa user1019
+ 25: user1024 entra specialist/no_priority ADM: 22 INI: 25 EST: 5
+ 28: user1027 en cola general/priority EST:5
+ 30: user1024 sale specialist/no_priority ADM:22, INI: 25, EST./TOTAL: 5/8
+ 31: user1011 en cola specialist/priority EST:4
+ 31: user1019 sale general/priority ADM:16, INI: 25, EST./TOTAL: 6/15
+ 31: user1007 entra general/priority ADM: 19 INI: 31 EST: 5
+ 31: Priorización activa user1007
+ 31: user1011 entra specialist/priority ADM: 31 INI: 31 EST: 4
+ 34: user1039 en cola general/priority EST:10
+ 35: user1011 sale specialist/priority ADM:31, INI: 31, EST./TOTAL: 4/4
+ 36: user1007 sale general/priority ADM:19, INI: 31, EST./TOTAL: 5/17
+ 36: user1027 entra general/priority ADM: 28 INI: 36 EST: 5
+ 36: Priorización activa user1027
+ 37: user1030 en cola specialist/no_priority EST:9
+ 37: user1030 entra specialist/no_priority ADM: 37 INI: 37 EST: 9
+ 40: Priorización aplicada user1007
+ 40: user1007 en cola specialist/priority EST:6
+ 41: user1027 sale general/priority ADM:28, INI: 36, EST./TOTAL: 5/13
+ 41: user1039 entra general/priority ADM: 34 INI: 41 EST: 10
+ 43: Priorización aplicada user1027
+ 43: user1027 en cola general/priority EST:6
+ 46: Priorización aplicada user1019
+ 46: user1019 en cola general/priority EST:3
+ 46: user1030 sale specialist/no_priority ADM:37, INI: 37, EST./TOTAL: 9/9
+ 46: user1007 entra specialist/priority ADM: 40 INI: 46 EST: 6
+ 51: user1039 sale general/priority ADM:34, INI: 41, EST./TOTAL: 10/17
+ 51: user1027 entra general/priority ADM: 43 INI: 51 EST: 6
+ 51: Priorización activa user1027
+ 52: user1007 sale specialist/priority ADM:40, INI: 46, EST./TOTAL: 6/12
+ 57: user1027 sale general/priority ADM:43, INI: 51, EST./TOTAL: 6/14
+ 57: user1019 entra general/priority ADM: 46 INI: 57 EST: 3
+ 57: Priorización activa user1019
+ 60: user1019 sale general/priority ADM:46, INI: 57, EST./TOTAL: 3/14
+ 60: user1038 entra general/no_priority ADM: 25 INI: 60 EST: 10
+ 60: Priorización activa user1038
+ 70: user1038 sale general/no_priority ADM:25, INI: 60, EST./TOTAL: 10/45
+
+
+ ******************** NÚMERO MEDIO DE CITAS DE PACIENTES CON PRIORIZACIÓN APLICADA
+
+           prioritization_applied
+                             mean
+type                             
+general                  0.222222
+specialist               0.142857
+
+
+ ******************** TIEMPO MEDIO DE PERMANENCIA EN COLAS DE ESPERA
+
+                       waiting_time           
+                               mean        std
+type       priority                           
+general    no_priority    12.333333  19.655364
+           priority        9.166667   1.940790
+specialist no_priority     3.666667   4.041452
+           priority        2.250000   2.872281
